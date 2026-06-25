@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Yishu Career Portfolio</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <main class="admin-shell">
+        <section id="login-panel" class="login-panel">
+            <p class="eyebrow">Portfolio Admin</p>
+            <h1>Manage website content</h1>
+            <form id="login-form" class="admin-card">
+                <label>
+                    <span>Username</span>
+                    <input name="username" value="admin" autocomplete="username" required>
+                </label>
+                <label>
+                    <span>Password</span>
+                    <input name="password" type="password" autocomplete="current-password" required>
+                </label>
+                <button type="submit">Log in</button>
+                <p id="login-status" class="status"></p>
+            </form>
+        </section>
+
+        <section id="dashboard" class="dashboard hidden">
+            <header class="admin-header">
+                <div>
+                    <p class="eyebrow">Admin Dashboard</p>
+                    <h1>Yishu Career Portfolio</h1>
+                </div>
+                <div class="header-actions">
+                    <a href="index.html" target="_blank">View site</a>
+                    <button id="logout-button" type="button">Log out</button>
+                </div>
+            </header>
+
+            <nav class="admin-tabs" aria-label="Admin sections">
+                <a href="#profile-section">Profile</a>
+                <a href="#experiences-section">Experiences</a>
+                <a href="#projects-section">Projects</a>
+                <a href="#skills-section">Skills</a>
+                <a href="#messages-section">HR Messages</a>
+            </nav>
+
+            <p id="global-status" class="status"></p>
+
+            <section id="profile-section" class="admin-section">
+                <div class="section-heading">
+                    <h2>Personal information</h2>
+                    <p>Changes are saved to PostgreSQL and reflected on the public website.</p>
+                </div>
+                <form id="profile-form" class="admin-card form-grid"></form>
+            </section>
+
+            <section id="experiences-section" class="admin-section">
+                <div class="section-heading">
+                    <h2>Internship and experience</h2>
+                    <p>Edit existing experiences or add new ones.</p>
+                </div>
+                <form id="experience-create-form" class="admin-card form-grid compact-card"></form>
+                <div id="experiences-admin-list" class="admin-list"></div>
+            </section>
+
+            <section id="projects-section" class="admin-section">
+                <div class="section-heading">
+                    <h2>Projects</h2>
+                    <p>Edit academic, research, ESG, finance and AI projects.</p>
+                </div>
+                <form id="project-create-form" class="admin-card form-grid compact-card"></form>
+                <div id="projects-admin-list" class="admin-list"></div>
+            </section>
+
+            <section id="skills-section" class="admin-section">
+                <div class="section-heading">
+                    <h2>Skills</h2>
+                    <p>Manage skills and supporting evidence.</p>
+                </div>
+                <form id="skill-create-form" class="admin-card form-grid compact-card"></form>
+                <div id="skills-admin-list" class="admin-list"></div>
+            </section>
+
+            <section id="messages-section" class="admin-section">
+                <div class="section-heading">
+                    <h2>HR messages</h2>
+                    <p>Messages submitted through the contact form.</p>
+                </div>
+                <div id="messages-admin-list" class="admin-list"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>
