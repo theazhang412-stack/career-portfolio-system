@@ -41,7 +41,9 @@ async function loadProfile() {
         document.getElementById("profile-phone-row").hidden = !profile.phone;
 
         const tagsContainer = document.getElementById("career-tags");
+        const focusList = document.getElementById("profile-focus-list");
         tagsContainer.replaceChildren();
+        focusList.replaceChildren();
 
         const featuredInterests = [
             "ESG",
@@ -55,6 +57,10 @@ async function loadProfile() {
             if (index < featuredInterests.length - 1) {
                 tagsContainer.appendChild(document.createElement("i"));
             }
+        });
+
+        (profile.career_interests || featuredInterests).forEach((interest) => {
+            focusList.appendChild(createElement("span", "", interest));
         });
     } catch (error) {
         console.error("Failed to load profile:", error);

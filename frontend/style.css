@@ -167,7 +167,7 @@ textarea {
 
 .hero-content {
     margin: 0 auto;
-    padding: clamp(130px, 16vh, 160px) 40px 70px;
+    padding: clamp(160px, 20vh, 205px) 40px 70px;
     position: static;
     text-align: center;
     width: var(--page);
@@ -220,7 +220,7 @@ h2 em {
 }
 
 .hero-content > .hero-intro-block {
-    bottom: 150px;
+    bottom: 74px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -371,11 +371,40 @@ h2 em {
     line-height: 1.02;
 }
 
-.about-copy > p:not(.eyebrow) {
+.about-copy > p:not(.eyebrow),
+.focus-panel {
     color: var(--ink-soft);
     font-size: 17px;
     margin: 32px 0;
     max-width: 650px;
+}
+
+.focus-panel {
+    border-left: 1px solid var(--stone);
+    padding-left: 26px;
+}
+
+.focus-label {
+    color: #718078;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+}
+
+.focus-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.focus-list span {
+    background: var(--sage-light);
+    border-radius: 999px;
+    color: var(--forest);
+    font-size: 13px;
+    padding: 7px 12px;
 }
 
 .dark-link {
@@ -810,7 +839,7 @@ footer > p:last-child {
     }
 
     .hero-content > .hero-intro-block {
-        bottom: 65px;
+        bottom: 44px;
         left: 35px;
         right: 35px;
         width: 270px;
