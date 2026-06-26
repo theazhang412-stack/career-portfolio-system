@@ -205,6 +205,25 @@ textarea {
     resize: vertical;
 }
 
+.type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+button.type-option {
+    background: #fbf8f0;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 10px 14px;
+}
+
+button.type-option.is-selected {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: white;
+}
+
 .admin-list {
     display: grid;
     gap: 18px;

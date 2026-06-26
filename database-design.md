@@ -38,6 +38,7 @@
 | `start_date` | Start date |
 | `end_date` | End date; can be empty for current roles |
 | `category` | Experience category, such as Finance, ESG, AI, Tech, Charity |
+| `types` | Filter tags for HR-facing portfolio views: `finance`, `ai`, `international-development` |
 | `description` | Short summary of the experience |
 | `achievements` | Key responsibilities or achievements |
 | `display_order` | Controls display order on the website |
@@ -49,6 +50,7 @@
 | `id` | Primary key |
 | `title` | Project title |
 | `category` | Project category |
+| `types` | Filter tags for HR-facing portfolio views: `finance`, `ai`, `international-development` |
 | `tools` | Tools, platforms, or methods used |
 | `description` | Project description |
 | `outcome` | Project result or output |
@@ -62,6 +64,7 @@
 | `id` | Primary key |
 | `skill_name` | Skill name |
 | `skill_type` | Skill category, such as Technical, Finance, Research, Operations |
+| `types` | Filter tags for HR-facing portfolio views: `finance`, `ai`, `international-development` |
 | `level` | Skill level |
 | `evidence` | Evidence showing where or how the skill was used |
 

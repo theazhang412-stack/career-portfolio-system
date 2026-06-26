@@ -57,6 +57,7 @@ class ExperienceCreate(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     category: str | None = None
+    types: list[str] = Field(default_factory=list)
     description: str | None = None
     achievements: list[str] = Field(default_factory=list)
     display_order: int = 0
@@ -69,6 +70,7 @@ class ExperienceUpdate(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     category: str | None = None
+    types: list[str] | None = None
     description: str | None = None
     achievements: list[str] | None = None
     display_order: int | None = None
@@ -77,6 +79,7 @@ class ExperienceUpdate(BaseModel):
 class ProjectCreate(BaseModel):
     title: str
     category: str | None = None
+    types: list[str] = Field(default_factory=list)
     tools: list[str] = Field(default_factory=list)
     description: str | None = None
     outcome: str | None = None
@@ -87,6 +90,7 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     title: str | None = None
     category: str | None = None
+    types: list[str] | None = None
     tools: list[str] | None = None
     description: str | None = None
     outcome: str | None = None
@@ -97,6 +101,7 @@ class ProjectUpdate(BaseModel):
 class SkillCreate(BaseModel):
     skill_name: str
     skill_type: str | None = None
+    types: list[str] = Field(default_factory=list)
     level: str | None = None
     evidence: str | None = None
     display_order: int = 0
@@ -105,6 +110,7 @@ class SkillCreate(BaseModel):
 class SkillUpdate(BaseModel):
     skill_name: str | None = None
     skill_type: str | None = None
+    types: list[str] | None = None
     level: str | None = None
     evidence: str | None = None
     display_order: int | None = None
@@ -143,6 +149,7 @@ def normalize_experience(row: dict[str, Any]) -> dict[str, Any]:
         "end_date": row["end_date"],
         "period": format_period(row["start_date"], row["end_date"]),
         "category": row["category"],
+        "types": row["types"] or [],
         "description": row["description"],
         "achievements": row["achievements"] or [],
         "highlights": row["achievements"] or [],
@@ -157,12 +164,25 @@ def normalize_project(row: dict[str, Any]) -> dict[str, Any]:
         "id": row["id"],
         "title": row["title"],
         "category": row["category"],
+        "types": row["types"] or [],
         "tools": ", ".join(tools),
         "tools_list": tools,
         "description": row["description"],
         "outcome": row["outcome"],
         "related_experience_id": row["related_experience_id"],
         "created_at": row["created_at"],
+        "display_order": row["display_order"],
+    }
+
+
+def normalize_skill(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "skill_name": row["skill_name"],
+        "skill_type": row["skill_type"],
+        "types": row["types"] or [],
+        "level": row["level"],
+        "evidence": row["evidence"],
         "display_order": row["display_order"],
     }
 
@@ -216,17 +236,28 @@ def get_profile():
 
 
 @app.get("/api/experiences")
-def get_experiences(category: str | None = Query(default=None)):
+def get_experiences(
+    category: str | None = Query(default=None),
+    portfolio_type: str | None = Query(default=None, alias="type"),
+):
     query = """
         SELECT id, organization, role, location, start_date, end_date, category,
-               description, achievements, display_order
+               types, description, achievements, display_order
         FROM experiences
     """
     params: list[Any] = []
+    conditions: list[str] = []
 
     if category:
-        query += " WHERE category ILIKE %s"
+        conditions.append("category ILIKE %s")
         params.append(f"%{category}%")
+
+    if portfolio_type:
+        conditions.append("%s = ANY(types)")
+        params.append(portfolio_type)
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
 
     query += " ORDER BY display_order ASC, start_date DESC NULLS LAST, id ASC"
 
@@ -239,36 +270,48 @@ def get_experiences(category: str | None = Query(default=None)):
 
 
 @app.get("/api/projects")
-def get_projects():
+def get_projects(portfolio_type: str | None = Query(default=None, alias="type")):
+    query = """
+        SELECT id, title, category, types, tools, description, outcome,
+               related_experience_id, created_at, display_order
+        FROM projects
+    """
+    params: list[Any] = []
+
+    if portfolio_type:
+        query += " WHERE %s = ANY(types)"
+        params.append(portfolio_type)
+
+    query += " ORDER BY display_order ASC, created_at DESC, id ASC"
+
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, title, category, tools, description, outcome,
-                       related_experience_id, created_at, display_order
-                FROM projects
-                ORDER BY display_order ASC, created_at DESC, id ASC
-                """
-            )
+            cur.execute(query, params)
             rows = cur.fetchall()
 
     return [normalize_project(row) for row in rows]
 
 
 @app.get("/api/skills")
-def get_skills():
+def get_skills(portfolio_type: str | None = Query(default=None, alias="type")):
+    query = """
+        SELECT id, skill_name, skill_type, types, level, evidence, display_order
+        FROM skills
+    """
+    params: list[Any] = []
+
+    if portfolio_type:
+        query += " WHERE %s = ANY(types)"
+        params.append(portfolio_type)
+
+    query += " ORDER BY display_order ASC, id ASC"
+
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, skill_name, skill_type, level, evidence, display_order
-                FROM skills
-                ORDER BY display_order ASC, id ASC
-                """
-            )
+            cur.execute(query, params)
             rows = cur.fetchall()
 
-    return rows
+    return [normalize_skill(row) for row in rows]
 
 
 @app.post("/api/messages")
@@ -371,11 +414,11 @@ def create_experience(
                 """
                 INSERT INTO experiences (
                     organization, role, location, start_date, end_date, category,
-                    description, achievements, display_order
+                    types, description, achievements, display_order
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id, organization, role, location, start_date, end_date,
-                          category, description, achievements, display_order
+                          category, types, description, achievements, display_order
                 """,
                 (
                     experience.organization,
@@ -384,6 +427,7 @@ def create_experience(
                     experience.start_date,
                     experience.end_date,
                     experience.category,
+                    experience.types,
                     experience.description,
                     experience.achievements,
                     experience.display_order,
@@ -403,16 +447,17 @@ def create_project(project: ProjectCreate, authorization: str | None = Header(de
             cur.execute(
                 """
                 INSERT INTO projects (
-                    title, category, tools, description, outcome,
+                    title, category, types, tools, description, outcome,
                     related_experience_id, display_order
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                RETURNING id, title, category, tools, description, outcome,
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, title, category, types, tools, description, outcome,
                           related_experience_id, created_at, display_order
                 """,
                 (
                     project.title,
                     project.category,
+                    project.types,
                     project.tools,
                     project.description,
                     project.outcome,
@@ -433,13 +478,14 @@ def create_skill(skill: SkillCreate, authorization: str | None = Header(default=
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO skills (skill_name, skill_type, level, evidence, display_order)
-                VALUES (%s, %s, %s, %s, %s)
-                RETURNING id, skill_name, skill_type, level, evidence, display_order
+                INSERT INTO skills (skill_name, skill_type, types, level, evidence, display_order)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id, skill_name, skill_type, types, level, evidence, display_order
                 """,
                 (
                     skill.skill_name,
                     skill.skill_type,
+                    skill.types,
                     skill.level,
                     skill.evidence,
                     skill.display_order,
@@ -447,7 +493,7 @@ def create_skill(skill: SkillCreate, authorization: str | None = Header(default=
             )
             row = cur.fetchone()
 
-    return row
+    return normalize_skill(row)
 
 
 @app.put("/api/admin/projects/{project_id}")
@@ -466,6 +512,7 @@ def update_project(
     allowed_fields = [
         "title",
         "category",
+        "types",
         "tools",
         "description",
         "outcome",
@@ -483,7 +530,7 @@ def update_project(
                 UPDATE projects
                 SET {set_clause}, updated_at = NOW()
                 WHERE id = %s
-                RETURNING id, title, category, tools, description, outcome,
+                RETURNING id, title, category, types, tools, description, outcome,
                           related_experience_id, created_at, display_order
                 """,
                 values,
@@ -533,6 +580,7 @@ def update_skill(
     allowed_fields = [
         "skill_name",
         "skill_type",
+        "types",
         "level",
         "evidence",
         "display_order",
@@ -548,7 +596,7 @@ def update_skill(
                 UPDATE skills
                 SET {set_clause}, updated_at = NOW()
                 WHERE id = %s
-                RETURNING id, skill_name, skill_type, level, evidence, display_order
+                RETURNING id, skill_name, skill_type, types, level, evidence, display_order
                 """,
                 values,
             )
@@ -557,7 +605,7 @@ def update_skill(
     if not row:
         raise HTTPException(status_code=404, detail="Skill not found")
 
-    return row
+    return normalize_skill(row)
 
 
 @app.delete("/api/admin/skills/{skill_id}")
@@ -619,6 +667,7 @@ def update_experience(
         "start_date",
         "end_date",
         "category",
+        "types",
         "description",
         "achievements",
         "display_order",
@@ -635,7 +684,7 @@ def update_experience(
                 SET {set_clause}, updated_at = NOW()
                 WHERE id = %s
                 RETURNING id, organization, role, location, start_date, end_date,
-                          category, description, achievements, display_order
+                          category, types, description, achievements, display_order
                 """,
                 values,
             )

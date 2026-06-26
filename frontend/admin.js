@@ -2,6 +2,11 @@ const API_BASE = ["localhost", "127.0.0.1"].includes(window.location.hostname)
     ? "http://127.0.0.1:8000"
     : "";
 const TOKEN_KEY = "portfolio_admin_token";
+const TYPE_OPTIONS = [
+    { value: "finance", label: "Finance" },
+    { value: "ai", label: "AI" },
+    { value: "international-development", label: "International Development" },
+];
 
 const loginPanel = document.getElementById("login-panel");
 const dashboard = document.getElementById("dashboard");
@@ -58,9 +63,20 @@ function confirmSuccess(message) {
 
 function splitLines(value) {
     return value
+        .split(/\n/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function splitList(value) {
+    return value
         .split(/\n|,/)
         .map((item) => item.trim())
         .filter(Boolean);
+}
+
+function normalizeTypes(value) {
+    return splitList(value).map((item) => item.toLowerCase().replace(/\s+/g, "-"));
 }
 
 function label(name, field) {
@@ -86,6 +102,36 @@ function textarea(name, value = "", rows = 4) {
     element.rows = rows;
     element.value = Array.isArray(value) ? value.join("\n") : value ?? "";
     return element;
+}
+
+function typeSelector(name, selectedTypes = []) {
+    const selected = new Set(Array.isArray(selectedTypes) ? selectedTypes : splitList(selectedTypes || ""));
+    const wrapper = document.createElement("div");
+    wrapper.className = "type-selector";
+
+    const hidden = input(name, Array.from(selected).join(","));
+    hidden.type = "hidden";
+    wrapper.appendChild(hidden);
+
+    function syncHiddenValue() {
+        hidden.value = Array.from(wrapper.querySelectorAll("button.is-selected"))
+            .map((button) => button.dataset.value)
+            .join(",");
+    }
+
+    TYPE_OPTIONS.forEach((option) => {
+        const optionButton = button(option.label, "type-option");
+        optionButton.dataset.value = option.value;
+        optionButton.classList.toggle("is-selected", selected.has(option.value));
+        optionButton.addEventListener("click", () => {
+            optionButton.classList.toggle("is-selected");
+            syncHiddenValue();
+        });
+        wrapper.appendChild(optionButton);
+    });
+
+    syncHiddenValue();
+    return wrapper;
 }
 
 function button(text, className = "") {
@@ -135,7 +181,7 @@ async function loadProfile() {
         label("Bio", { input: textarea("bio", profile.bio, 5), full: true }),
         formActions(async () => {
             const values = formValues(form);
-            values.career_interests = splitLines(values.career_interests);
+            values.career_interests = splitList(values.career_interests);
             await api("/api/admin/profile", {
                 method: "PUT",
                 headers: authHeaders(),
@@ -155,7 +201,7 @@ function experiencePayload(form) {
         location: values.location || null,
         start_date: values.start_date || null,
         end_date: values.end_date || null,
-        category: values.category || null,
+        types: normalizeTypes(values.types || ""),
         description: values.description || null,
         achievements: splitLines(values.achievements || ""),
         display_order: Number(values.display_order || 0),
@@ -169,7 +215,7 @@ function renderExperienceForm(experience = {}) {
         label("Organization", { input: input("organization", experience.organization) }),
         label("Role", { input: input("role", experience.role) }),
         label("Location", { input: input("location", experience.location) }),
-        label("Category", { input: input("category", experience.category) }),
+        label("Type tags", { input: typeSelector("types", experience.types || []) }),
         label("Start date", { input: input("start_date", experience.start_date, "date") }),
         label("End date", { input: input("end_date", experience.end_date, "date") }),
         label("Display order", { input: input("display_order", experience.display_order ?? 0, "number") }),
@@ -226,8 +272,8 @@ function projectPayload(form) {
     const values = formValues(form);
     return {
         title: values.title,
-        category: values.category || null,
-        tools: splitLines(values.tools || ""),
+        types: normalizeTypes(values.types || ""),
+        tools: splitList(values.tools || ""),
         description: values.description || null,
         outcome: values.outcome || null,
         related_experience_id: values.related_experience_id ? Number(values.related_experience_id) : null,
@@ -240,7 +286,7 @@ function renderProjectForm(project = {}) {
     form.className = "admin-card form-grid";
     form.replaceChildren(
         label("Title", { input: input("title", project.title) }),
-        label("Category", { input: input("category", project.category) }),
+        label("Type tags", { input: typeSelector("types", project.types || []) }),
         label("Related experience ID", { input: input("related_experience_id", project.related_experience_id, "number") }),
         label("Display order", { input: input("display_order", project.display_order ?? 0, "number") }),
         label("Tools", { input: textarea("tools", project.tools_list || project.tools || []), full: true }),
@@ -298,6 +344,7 @@ function skillPayload(form) {
     return {
         skill_name: values.skill_name,
         skill_type: values.skill_type || null,
+        types: normalizeTypes(values.types || ""),
         level: values.level || null,
         evidence: values.evidence || null,
         display_order: Number(values.display_order || 0),
@@ -310,6 +357,7 @@ function renderSkillForm(skill = {}) {
     form.replaceChildren(
         label("Skill name", { input: input("skill_name", skill.skill_name) }),
         label("Skill type", { input: input("skill_type", skill.skill_type) }),
+        label("Type tags", { input: typeSelector("types", skill.types || []) }),
         label("Level", { input: input("level", skill.level) }),
         label("Display order", { input: input("display_order", skill.display_order ?? 0, "number") }),
         label("Evidence", { input: textarea("evidence", skill.evidence), full: true })

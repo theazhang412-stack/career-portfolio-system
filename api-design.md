@@ -11,8 +11,11 @@ The frontend must not read the database directly. All data should be fetched or 
 | `GET` | `/api/profile` | Read homepage profile data | Done, reads from PostgreSQL `profile` table |
 | `GET` | `/api/experiences` | Read all experiences | Done, reads from PostgreSQL `experiences` table |
 | `GET` | `/api/experiences?category=Finance` | Filter experiences by category | Done, supports category query |
+| `GET` | `/api/experiences?type=finance` | Filter experiences by portfolio type | Done, supports `finance`, `ai`, `international-development` |
 | `GET` | `/api/projects` | Read all projects | Done, reads from PostgreSQL `projects` table |
+| `GET` | `/api/projects?type=finance` | Filter projects by portfolio type | Done, supports `finance`, `ai`, `international-development` |
 | `GET` | `/api/skills` | Read skills list | Done, reads from PostgreSQL `skills` table |
+| `GET` | `/api/skills?type=finance` | Filter skills by portfolio type | Done, supports `finance`, `ai`, `international-development` |
 | `POST` | `/api/messages` | Submit visitor message | Done, writes to PostgreSQL `messages` table |
 
 ## Admin APIs
@@ -83,6 +86,7 @@ Completed:
 - Contact messages are persisted to PostgreSQL.
 - Skills API is implemented.
 - Experience category filtering is implemented.
+- Portfolio type filtering is implemented for experiences, projects, and skills.
 - Admin APIs are implemented with Bearer Token protection.
 - Admin dashboard page is implemented at `frontend/admin.html`.
 

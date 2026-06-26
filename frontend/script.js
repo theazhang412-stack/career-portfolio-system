@@ -1,6 +1,13 @@
 const API_BASE = ["localhost", "127.0.0.1"].includes(window.location.hostname)
     ? "http://127.0.0.1:8000"
     : "";
+let activeFilter = "all";
+
+const TYPE_LABELS = {
+    "finance": "Finance",
+    "ai": "AI",
+    "international-development": "International Development",
+};
 
 async function fetchJSON(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, options);
@@ -24,6 +31,18 @@ function createElement(tag, className, text) {
     if (className) element.className = className;
     if (text) element.textContent = text;
     return element;
+}
+
+function typeQuery() {
+    return activeFilter === "all" ? "" : `?type=${encodeURIComponent(activeFilter)}`;
+}
+
+function createTypeTags(types = []) {
+    const wrapper = createElement("div", "type-tags");
+    types.forEach((type) => {
+        wrapper.appendChild(createElement("span", "type-tag", TYPE_LABELS[type] || type));
+    });
+    return wrapper;
 }
 
 async function loadProfile() {
@@ -71,8 +90,13 @@ async function loadExperiences() {
     const list = document.getElementById("experiences-list");
 
     try {
-        const experiences = await fetchJSON("/api/experiences");
+        const experiences = await fetchJSON(`/api/experiences${typeQuery()}`);
         list.replaceChildren();
+
+        if (!experiences.length) {
+            list.appendChild(createElement("p", "loading-state", "No experience is tagged for this focus area yet."));
+            return;
+        }
 
         experiences.forEach((experience) => {
             const item = createElement("article", "experience-item");
@@ -93,7 +117,7 @@ async function loadExperiences() {
             title.append(
                 createElement("h3", "", experience.organization),
                 createElement("p", "", experience.role),
-                createElement("span", "experience-category", experience.category)
+                createTypeTags(experience.types)
             );
             item.append(period, title, details);
             list.appendChild(item);
@@ -108,8 +132,13 @@ async function loadProjects() {
     const list = document.getElementById("projects-list");
 
     try {
-        const projects = await fetchJSON("/api/projects");
+        const projects = await fetchJSON(`/api/projects${typeQuery()}`);
         list.replaceChildren();
+
+        if (!projects.length) {
+            list.appendChild(createElement("p", "loading-state light", "No project is tagged for this focus area yet."));
+            return;
+        }
 
         projects.forEach((project, index) => {
             const item = createElement("article", "project-item");
@@ -122,7 +151,7 @@ async function loadProjects() {
 
             item.append(
                 createElement("p", "project-number", String(index + 1).padStart(2, "0")),
-                createElement("p", "project-category", project.category),
+                createTypeTags(project.types),
                 createElement("h3", "", project.title),
                 createElement("p", "project-description", `${project.description} ${project.outcome}`),
                 footer
@@ -139,8 +168,13 @@ async function loadSkills() {
     const list = document.getElementById("skills-list");
 
     try {
-        const skills = await fetchJSON("/api/skills");
+        const skills = await fetchJSON(`/api/skills${typeQuery()}`);
         list.replaceChildren();
+
+        if (!skills.length) {
+            list.appendChild(createElement("p", "loading-state", "No skill is tagged for this focus area yet."));
+            return;
+        }
 
         skills.forEach((skill) => {
             const card = createElement("article", "skill-item");
@@ -151,6 +185,7 @@ async function loadSkills() {
                     "skill-meta",
                     [skill.skill_type, skill.level].filter(Boolean).join(" · ")
                 ),
+                createTypeTags(skill.types),
                 createElement("p", "skill-evidence", skill.evidence)
             );
             list.appendChild(card);
@@ -190,8 +225,29 @@ async function submitContactForm(event) {
     }
 }
 
+function setupPortfolioFilters() {
+    const buttons = document.querySelectorAll(".filter-button");
+
+    buttons.forEach((button) => {
+        button.addEventListener("click", async () => {
+            activeFilter = button.dataset.filter || "all";
+
+            buttons.forEach((item) => {
+                item.classList.toggle("is-active", item === button);
+            });
+
+            await Promise.allSettled([
+                loadExperiences(),
+                loadProjects(),
+                loadSkills(),
+            ]);
+        });
+    });
+}
+
 document.getElementById("current-year").textContent = new Date().getFullYear();
 document.getElementById("contact-form").addEventListener("submit", submitContactForm);
+setupPortfolioFilters();
 
 Promise.allSettled([
     loadProfile(),
