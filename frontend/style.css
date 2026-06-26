@@ -341,8 +341,9 @@ h2 em {
 
 .about {
     display: grid;
-    gap: 7%;
-    grid-template-columns: 12% 1fr 31%;
+    gap: 5%;
+    grid-template-columns: 9% minmax(360px, 0.82fr) minmax(430px, 1.08fr);
+    align-items: stretch;
 }
 
 .section-index {
@@ -369,6 +370,11 @@ h2 em {
     font-weight: 400;
     letter-spacing: -0.045em;
     line-height: 1.02;
+}
+
+.about-copy h2 {
+    font-size: clamp(38px, 4.1vw, 58px);
+    max-width: 620px;
 }
 
 .about-copy > p:not(.eyebrow),
@@ -412,11 +418,13 @@ h2 em {
 }
 
 .education-card {
-    align-self: end;
+    align-self: stretch;
     background: var(--cream);
     border-radius: 2px 2px 90px 2px;
-    min-height: 430px;
-    padding: 35px;
+    display: flex;
+    flex-direction: column;
+    min-height: 520px;
+    padding: 36px 40px 32px;
     position: relative;
 }
 
@@ -430,28 +438,31 @@ h2 em {
 .education-rule {
     background: var(--stone);
     height: 1px;
-    margin: 20px 0 55px;
+    margin: 14px 0 28px;
 }
 
 .education-card h3 {
     font-family: var(--serif);
-    font-size: 30px;
+    font-size: clamp(38px, 3.5vw, 54px);
     font-weight: 400;
-    line-height: 1.15;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
 }
 
 .education-card > p:not(.card-kicker) {
     color: var(--ink-soft);
-    font-size: 13px;
-    margin-top: 14px;
+    font-size: 15px;
+    margin-top: 16px;
 }
 
 .profile-details {
     border-top: 1px solid var(--stone);
     display: grid;
-    gap: 13px;
-    margin-top: 28px;
-    padding-top: 22px;
+    gap: 18px 26px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 32px;
+    padding-bottom: 42px;
+    padding-top: 26px;
 }
 
 .profile-details p {
@@ -471,22 +482,21 @@ h2 em {
 .profile-details strong {
     color: var(--ink);
     display: block;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
 
 .education-meta {
-    bottom: 28px;
+    border-top: 1px solid var(--stone);
+    margin-top: auto;
+    padding-top: 22px;
     color: #77827c;
     display: flex;
     font-size: 10px;
     justify-content: space-between;
-    left: 35px;
     letter-spacing: 0.1em;
-    position: absolute;
-    right: 35px;
     text-transform: uppercase;
 }
 
